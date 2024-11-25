@@ -1,78 +1,57 @@
-### Overview:
+### Overview
 
-    The Breathalyzer Project is a Python-based application designed to integrate with BACtrack Breathalyzer devices, 
-    allowing users to measure their Blood Alcohol Concentration (BAC) and receive personalized feedback based on their 
-    test results. This project takes a responsible, advisorial approach to drinking habits, providing users with guidance 
-    regarding their BAC levels.
+The **Breathalyzer Project** is a Python-based application designed to integrate with BACtrack Breathalyzer devices, allowing users to measure their Blood Alcohol Concentration (BAC) and receive personalized feedback based on their test results. This project takes a responsible, advisorial approach to drinking habits, providing users with guidance regarding their BAC levels.
 
-    Unlike traditional party games, this system focuses on health and safety by advising users to stop drinking if their 
-    BAC exceeds safe limits or offering neutral, factual information about their drinking behavior. The application integrates 
-    with hardware to automate BAC testing, providing real-time results and feedback through a user-friendly interface, 
-    including a Vestaboard display
+Unlike traditional party games, this system focuses on health and safety by advising users to stop drinking if their BAC exceeds safe limits or offering neutral, factual information about their drinking behavior. The game is meant to be used at a small social event like a party or get-together, where the host has at a minimum a BACtrack breathalyzer. 
+
+The application integrates with hardware to automate BAC testing, providing real-time results and feedback through a user-friendly interface, including a **Vestaboard** display.
+
+---
 
 ### Architecture
 
-
 ![](images/Vestaboard_Architecture.png?raw=true)
 
-    1. User onboards to the game, by sending a provided password to a provided number and accepting terms and conditions.
-       Message sending/receiving facilitation between phone number and Python Application is done by Twilio. 
-       Once onboarded and if the breathalyzer is not being used, the user can initiate a test
+1. **User Onboarding**: The user onboards to the game by sending a provided password to a given number and accepting terms and conditions. Message sending/receiving facilitation between phone number and Python Application is done by **Twilio**. Once onboarded and if the breathalyzer is not being used, the user can initiate a test.
 
-    2. Python application running on BeagleBone Green IoT 'mini-computer' notifies the breathalyzer to start warming up
-       and receives a response from the user once the device is ready. Python application, then sends a user a text
-       message to begin blowing on breathalyzer.
+2. **BeagleBone Green IoT Integration**: The Python application running on a **BeagleBone Green IoT 'mini-computer'** notifies the breathalyzer to start warming up and receives a response from the user once the device is ready. The BeagleBone Green runs on an **ARMv7 Cortex-A8 processor**, with **512MB RAM** and **4GB Flash**, making the device computationally constrained. 
 
-    3. User receives text message to begin breathalyzer test, and starts blowing on breathalyzer. The user hears a click
-       on the device, and also receives a message for when they can stop blowing, and transition to waiting for test results
-       to process.
+3. **User Test Initiation**: The Python application sends a text message to the user to begin blowing on the breathalyzer. The user receives a message and starts blowing. Upon hearing a click from the device, they know they can stop blowing and wait for the test results.
 
-    4. Python application receives results from breathalyzer, and sends to Google Gemini language model, to come up with 
-       an informative/warning fact to display relating to user's test results.
+4. **Test Result Processing**: The Python application receives results from the breathalyzer and sends them to **Google Gemini** language model to generate an informative or warning message related to the user's BAC level.
 
-    5. Python application receives message to display from Gemini model, and sends a display request to Vestaboard UI
-       to display the same message.
-    
+5. **Display Message on Vestaboard**: The Python application receives a message from the Gemini model and sends a display request to the **Vestaboard UI**, showing the message.
 
-### Directory Structure:
-    
-    Note that the entire project utilizes 'poetry' rather than 'pip' for project dependency and virtual envrionment management.
-    Additionally a Makefile is used to start the application.
+---
 
-    1. party_client/bactrack_stats.py 
-       Class to handle pulling a histogram of all BacTrack user's usage on the given day, from live BacTrack APIs.
+### Directory Structure
 
-    2. party_client/breathalyzer_client.py
-       Handles all interactions with the breathalyzer. This includes handling device attributes such as battery level, 
-       device warmup following user initation of a test, user test semantics, and crunching and returning the user's test
-       results. Communication between the Python applciation and the Breathalyzer device is done using Bluetooth (BLE) protocol.
+Note that the entire project utilizes **'poetry'** rather than **'pip'** for project dependency and virtual environment management. Additionally, a **Makefile** is used to start the application.
 
-    3. party_client/flask_server.py
-       Entry point for the Python application, which actually starts the Flask server which allows a number to send requests
-       and receives responses from our game. An ngrok reverse proxy is used, to facilitate forwarding of requests from Twilio
-       to our Python application. Startup of this server, is handled by Makefile.
+1. **party_client/bactrack_stats.py**  
+   Handles pulling a histogram of all BACtrack users' usage on a given day from live BACtrack APIs.
 
-    4. party_client/genai_client.py
-       GenAI integration with Google Gemini hosted models, to fetch a fun/informative fact on user, following a user's
-       BAC test, and considering their test history.
+2. **party_client/breathalyzer_client.py**  
+   Manages all interactions with the breathalyzer. Includes handling device attributes such as battery level, warmup following test initiation, and returning test results. Communication is done via Bluetooth (BLE) protocol.
 
-    5. party_client/logic.py
-       Contains the central orchestrator/logic behind user text messages sent to the Python Application. Items related to 
-       onboarding a new user to the platform, ensuring they agree to T&C, and starting and viewing test results are handled, 
-       in addition to vestaboard leaderboard and display management, and complex error handling. Additionally, admins have
-       special permissions for doing things like broadcasting a message to all users, or ending the game.
+3. **party_client/flask_server.py**  
+   Entry point for the Python application, starting the Flask server which allows users to send requests and receive responses. **Ngrok** reverse proxy is used for forwarding requests from Twilio to the Python application.
 
-    6. party_client/user.py
-       File which handles the game state, consisting of all the users onboarded to the game, along with their status in the 
-       game onboarding flow, and their BAC test history. This state is constantly persisted to a JSON backup file, which
-       is automatically retrieved should the application be restarted should it crash.
+4. **party_client/genai_client.py**  
+   Handles integration with **Google Gemini** hosted models to fetch a fun/informative fact based on the user's BAC test and their test history.
 
-    7. party_client/vestaboard_client.py
-       Class which handles all semantics of writing data to the Vestabord UI display. Handles connection to the Vestaboard UI 
-       display, and utilizes a Vestabord provided VBML API to format a message into a Vestabord friendly byte string, after
-       which Vestabord Local Read APIs are used to write to the board.
+5. **party_client/logic.py**  
+   Contains the central orchestrator behind user text messages, managing onboarding, T&C agreement, test initiation, leaderboard display, and error handling. Admins can broadcast messages or end the game.
 
-### References: 
+6. **party_client/user.py**  
+   Manages the game state, including all onboarded users, their status, and BAC test history. The state is persisted in a JSON file, which is reloaded if the application crashes.
+
+7. **party_client/vestaboard_client.py**  
+   Manages the semantics of writing data to the **Vestaboard UI display**, using the **VBML API** to format messages into byte strings and then using **Vestaboard Local Read APIs** to update the board.
+
+---
+
+### References
 
 1. [Vestaboard UI Overview](https://www.vestaboard.com/)  
    Overview of the Vestaboard display UI.
@@ -84,10 +63,10 @@
    BAC monitoring breathalyzer device.
 
 4. [BACtrack SDK Documentation](https://developer.bactrack.com/breathalyzer_sdk/documentation)  
-   Breathalyzer Mobile App SDK, which was used to develop a custom implementation for communicating with the Breathalyzer via Bluetooth.
+   Breathalyzer Mobile App SDK, used for developing custom communication implementations via Bluetooth.
 
 5. [Twilio SMS API](https://www.twilio.com/en-us/messaging/channels/sms)  
-   Twilio products and APIs, used to facilitate requests/responses between a mobile number and Python application.
+   Twilio products and APIs used for facilitating requests/responses between a mobile number and Python application.
 
 6. [BeagleBone Green Wiki](https://wiki.seeedstudio.com/BeagleBone_Green/)  
-   BeagleBone Green IoT device, which the Python application runs on.
+   BeagleBone Green IoT device, where the Python application runs.
