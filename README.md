@@ -15,6 +15,23 @@
 
 ![](images/Vestaboard_Architecture.png?raw=true)
 
+    1. User onboards to the game, by sending a provided password to a provided number and accepting terms and conditions.
+       Message sending/receiving facilitation between phone number and Python Application is done by Twilio. 
+       Once onboarded and if the breathalyzer is not being used, the user can initiate a test
+
+    2. Python application running on BeagleBone Green IoT 'mini-computer' notifies the breathalyzer to start warming up
+       and receives a response from the user once the device is ready. Python application, then sends a user a text
+       message to begin blowing on breathalyzer.
+
+    3. User receives text message to begin breathalyzer test, and starts blowing on breathalyzer. The user hears a click
+       on the device, and also receives a message for when they can stop blowing, and transition to waiting for test results
+       to process.
+
+    4. Python application receives results from breathalyzer, and sends to Google Gemini language model, to come up with 
+       an informative/warning fact to display relating to user's test results.
+
+    5. Python application receives message to display from Gemini model, and sends a display request to Vestaboard UI
+       to display the same message.
     
 
 ### Directory Structure:
@@ -42,7 +59,8 @@
     5. party_client/logic.py
        Contains the central orchestrator/logic behind user text messages sent to the Python Application. Items related to 
        onboarding a new user to the platform, ensuring they agree to T&C, and starting and viewing test results are handled, 
-       in addition to vestaboard leaderboard and display management, and complex error handling.
+       in addition to vestaboard leaderboard and display management, and complex error handling. Additionally, admins have
+       special permissions for doing things like broadcasting a message to all users, or ending the game.
 
     6. party_client/user.py
        File which handles the game state, consisting of all the users onboarded to the game, along with their status in the 
