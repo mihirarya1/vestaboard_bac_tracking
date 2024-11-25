@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "breathalyzer_sdk"
+version = "0.1.0"
+description = ""
+authors = ["mihirarya1 <mihirarya@ucla.edu>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.14"
+bleak = "^0.22.3"
+flask = "^3.0.3"
+twilio = "^9.3.3"
+ngrok-flask-cart = "^0.0.7"
+black = "^24.10.0"
+vobject = "^0.9.8"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
